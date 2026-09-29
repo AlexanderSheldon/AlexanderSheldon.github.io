@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f2f2ec">
-  <meta name="description" content="A semantic segmentation project comparing U-Net and DeepLabV3+ on OpenEarthMap satellite and aerial imagery.">
-  <title>Land-Cover Segmentation | Alexander Sheldon</title>
+  <meta name="description" content="How U-Net and DeepLabV3+ handled heterogeneous urban scenes in a high-resolution land-cover segmentation project.">
+  <title>Addressing the Heterogeneity Problem with Automated Land Cover Classification | Alexander Sheldon</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,106 +21,115 @@
     <nav class="site-nav" aria-label="Main navigation">
       <a href="../../index.html#work">Work</a>
       <a href="../../index.html#about">About</a>
-      <a class="nav-index" href="#sources">Project files</a>
+      <a class="nav-index" href="#sources">Project report</a>
     </nav>
   </header>
 
-  <main id="main" class="project-main">
-    <div class="project-breadcrumb"><a href="../../index.html">Portfolio</a> / Selected project / 01</div>
-    <header class="project-hero-heading">
-      <p class="project-kicker">DATA 5610 &middot; COMPUTER VISION CASE STUDY</p>
-      <h1 class="project-title">Mapping land cover,<br>pixel by pixel.</h1>
-      <p class="project-lede">A study of U-Net and DeepLabV3+ for semantic segmentation of high-resolution satellite and aerial imagery, using OpenEarthMap.</p>
+  <main id="main" class="report-main">
+    <p class="report-breadcrumb"><a href="../../index.html">Portfolio</a> / Project 01</p>
+    <header class="report-header">
+      <p class="report-kicker">DATA 5610 &middot; OPENEARTHMAP &middot; SEMANTIC SEGMENTATION</p>
+      <h1 class="report-title">Addressing the Heterogeneity Problem with Automated Land Cover Classification</h1>
+      <p class="report-deck">I compared U-Net and DeepLabV3+ on high-resolution satellite imagery to see how each model handled dense, varied city scenes, where small land-cover classes can disappear into larger shapes.</p>
     </header>
 
-    <dl class="project-facts">
-      <div><dt>Task</dt><dd>Semantic segmentation</dd></div>
-      <div><dt>Dataset</dt><dd>OpenEarthMap</dd></div>
-      <div><dt>Models</dt><dd>U-Net &middot; DeepLabV3+</dd></div>
-      <div><dt>Tools</dt><dd>TensorFlow &middot; Rasterio</dd></div>
-    </dl>
+    <section class="report-section" aria-labelledby="problem-title">
+      <h2 id="problem-title">Why heterogeneous cities are hard to map</h2>
+      <p>Land-cover maps support urban planning, agriculture, disaster response, and other spatial analyses. Manually labeling every pixel takes time: the report notes that one 1,024 &times; 1,024 tile can take about two and a half hours to label. Automated models reduce that work, but mixed urban scenes are still difficult. At lower resolution, narrow roads, small buildings, and patches of vegetation can blend together or disappear.</p>
+      <p>I used OpenEarthMap's high-resolution imagery to compare two segmentation approaches. Each model predicts a land-cover label for every pixel, so the shape of a road or a small patch between buildings matters as much as the broad class of the surrounding area.</p>
+    </section>
 
-    <figure class="comparison-figure">
-      <img src="../../assets/paris-67-comparison.png" alt="Four-panel comparison of a Paris satellite scene, its OpenEarthMap reference mask, and U-Net and DeepLabV3+ predicted masks.">
-      <figcaption>Paris 67: input image, reference label mask, U-Net prediction, and DeepLabV3+ prediction. Figure exported from the project comparison notebook. Source imagery: Maxar via SpaceNet, Paris, CC BY-SA 4.0. Dataset labels: OpenEarthMap.</figcaption>
-    </figure>
+    <section class="report-section" aria-labelledby="data-title">
+      <h2 id="data-title">Preparing the imagery</h2>
+      <p>OpenEarthMap combines high-resolution images from geographically varied cities, generally at 0.25 to 0.5 meters per pixel. I loaded RGB GeoTIFFs and their label masks as image-mask pairs, resized them to 512 &times; 512 pixels with Lanczos interpolation, and passed them to TensorFlow dataset generators.</p>
+      <p>Some images were missing because they came from the xBD dataset and were not available in the copy I used. I left those pairs out. The notebook logs show that the training and validation losses had stabilized, but the available test split had no retained pairs, so the reported model evaluation uses validation data.</p>
+      <aside class="report-note"><strong>Class-count note.</strong> The report and notebooks configure nine label outputs, while the current OpenEarthMap overview lists eight land-cover classes. The source files do not explain the extra output, so I do not assign it a background meaning or make class-specific claims from it.</aside>
+    </section>
 
-    <div class="project-content">
-      <section class="project-section" aria-labelledby="task-title">
-        <div><p class="section-number">01 / THE TASK</p><h2 id="task-title">A label for every pixel</h2></div>
-        <div class="project-copy">
-          <p>Instead of assigning one category to a whole image, semantic segmentation predicts a land-cover class for each pixel. The project uses OpenEarthMap, a global benchmark with 5,000 high-resolution images and manually annotated labels across 97 regions in 44 countries.</p>
-          <p>The dataset documents eight land-cover classes:</p>
-          <ul class="class-list" aria-label="OpenEarthMap land-cover classes">
-            <li>Bareland</li><li>Rangeland</li><li>Developed space</li><li>Road</li><li>Tree</li><li>Water</li><li>Agriculture land</li><li>Building</li>
-          </ul>
-          <aside class="class-warning"><p><strong>Configuration note.</strong> Both training notebooks set <code>CLASSES = 9</code>, while OpenEarthMap documents eight label classes. The project files do not explain the ninth output channel, so this case study does not assume it represents background or interpret class-specific results.</p></aside>
-        </div>
-      </section>
+    <section class="report-section" aria-labelledby="models-title">
+      <h2 id="models-title">A baseline, then more spatial context</h2>
+      <h3 class="report-subheading">U-Net: carry detail through the decoder</h3>
+      <p>The U-Net paper pairs a contracting path with an expanding path. Repeated convolutions and pooling shrink the feature maps while collecting context; the decoder upsamples them again. At each level, skip connections join the decoder to high-resolution features from the matching encoder stage. Those copied features help the final mask recover where boundaries and small objects sit in the image.</p>
+      <p>I built this project's U-Net from scratch in TensorFlow. It has four encoder stages with 64, 128, 256, and 512 feature channels, a 1,024-channel bottleneck, and four corresponding decoder stages. A final 1 x 1 convolution produces the configured class probabilities. This gave me a useful baseline, but its masks often had soft boundaries and pixel-level noise.</p>
+      <figure class="report-figure report-figure-wide">
+        <img src="../../assets/unet-architecture-paper.png" alt="U-Net architecture diagram from the original paper, showing a contracting encoder path, skip connections, and an expanding decoder path.">
+        <figcaption>U-Net's contracting path and expanding path, joined by skip connections. Figure 1 from <a href="https://arxiv.org/abs/1505.04597">Ronneberger, Fischer, and Brox (2015)</a>.</figcaption>
+      </figure>
+      <h3 class="report-subheading">DeepLabV3+: add context at several scales</h3>
+      <p>The DeepLabV3+ paper combines atrous spatial pyramid pooling (ASPP) with a decoder. Atrous, or dilated, convolutions sample a wider area without another pooling step. ASPP runs several dilation rates in parallel, so features can include nearby detail and broader scene context. The decoder joins those features with earlier, higher-resolution features to refine object boundaries.</p>
+      <p>My implementation uses an ImageNet-pretrained ResNet50 encoder. It feeds a high-level feature map through ASPP branches at rates 1, 6, 12, and 18, then upsamples and joins that context with a lower-level feature map from the encoder before predicting the mask. The paper also explores Xception and depthwise-separable convolutions; this project uses ResNet50 instead, so it is not an exact reproduction of every paper configuration.</p>
+      <figure class="report-figure report-figure-wide">
+        <img src="../../assets/deeplab-architecture-paper.png" alt="DeepLabV3+ paper diagram comparing DeepLabV3 with the proposed encoder-decoder model that combines multi-scale context with boundary refinement.">
+        <figcaption>DeepLabV3+ adds a decoder to DeepLabV3's multi-scale context module. Figure 1 from <a href="https://arxiv.org/abs/1802.02611">Chen et al. (2018)</a>.</figcaption>
+      </figure>
+      <p>The two designs address the same tension in different ways: U-Net returns encoder detail through direct skip connections, while DeepLabV3+ builds a multi-scale context representation and refines it with a decoder.</p>
+    </section>
 
-      <section class="project-section" aria-labelledby="approach-title">
-        <div><p class="section-number">02 / APPROACH</p><h2 id="approach-title">Two routes to a mask</h2></div>
-        <div class="project-copy">
-          <p>GeoTIFF imagery and labels are loaded with Rasterio, resized to 512 &times; 512 pixels, and image values are normalized before inference. Both models are built and trained in TensorFlow.</p>
-          <div class="model-list">
-            <article class="model-row"><h3>U-Net</h3><p>A ground-up encoder-decoder implementation with skip connections, trained for 15 epochs in the recorded run.</p></article>
-            <article class="model-row"><h3>DeepLabV3+</h3><p>A second segmentation architecture trained for 25 epochs in the recorded run; its prediction masks are compared against the same visual examples.</p></article>
-          </div>
-        </div>
-      </section>
+    <section class="report-section" aria-labelledby="performance-title">
+      <h2 id="performance-title">Validation performance</h2>
+      <p>Mean Intersection over Union (mIoU) measures how much a predicted region overlaps its reference label. For one class, <code>IoU = intersection / union</code>: the intersection is the pixels predicted and labeled as that class; the union is every pixel predicted or labeled as that class. mIoU takes the average of the IoU scores across classes. A score of 1 means perfect overlap; 0 means no overlap. Since each class contributes one score to the average, a small class can matter as much as a common one.</p>
+      <p>mIoU is an overlap-quality score, not an error percentage: higher is better. I tracked it on the validation data during training. In the report's curves, DeepLabV3+ moved ahead of U-Net by epoch four. I trained it ten epochs longer, but its validation curve then largely flattened while training performance continued to improve. That gap suggests the model may be fitting its training examples more closely than the validation examples.</p>
+      <div class="report-figure-grid">
+        <figure class="report-figure">
+          <img src="../../assets/unet-miou-report.png" alt="U-Net training and validation Mean IoU curves from the project report.">
+          <figcaption>U-Net Mean IoU across training epochs.</figcaption>
+        </figure>
+        <figure class="report-figure">
+          <img src="../../assets/deeplab-miou-report.png" alt="DeepLabV3+ training and validation Mean IoU curves from the project report.">
+          <figcaption>DeepLabV3+ Mean IoU across training epochs.</figcaption>
+        </figure>
+      </div>
+      <p class="report-caveat">These are validation curves, not test-set results. The dataset copy used for the project had no retained labeled test pairs, so I could not measure performance on a held-out test set. The nine configured output channels also do not match OpenEarthMap's eight documented classes, which limits class-by-class interpretation of mIoU.</p>
+    </section>
 
-      <section class="project-section" aria-labelledby="results-title">
-        <div><p class="section-number">03 / RECORDED RESULTS</p><h2 id="results-title">Validation snapshots</h2></div>
-        <div class="project-copy">
-          <p>The notebooks record the following validation metrics at the indicated epochs:</p>
-          <div class="metric-wrap">
-            <table class="metric-table">
-              <caption>Recorded validation metrics by model run</caption>
-              <thead><tr><th scope="col">Run snapshot</th><th scope="col">Epoch</th><th scope="col">Dice</th><th scope="col">Mean IoU</th><th scope="col">Pixel accuracy</th></tr></thead>
-              <tbody>
-                <tr><th scope="row">U-Net</th><td>10 / 15</td><td>0.4911</td><td>0.3491</td><td>0.5846</td></tr>
-                <tr><th scope="row">DeepLabV3+</th><td>25 / 25</td><td>0.3557</td><td>0.6060</td><td>0.7249</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="metric-note"><strong>Interpret with care.</strong> These are validation log snapshots from separate runs, not a controlled head-to-head benchmark. The notebooks report no retained test pairs and use validation data for evaluation; the U-Net notebook also reports 365 of 500 validation pairs remaining. Metric implementations and usable samples differ, and the nine-channel configuration is unresolved. The values should not be read as held-out test or generalization performance.</p>
-        </div>
-      </section>
+    <section class="report-section" aria-labelledby="visual-title">
+      <h2 id="visual-title">What the masks show</h2>
+      <p>On the Austin example, U-Net captures the broad classes but sometimes merges nearby classes into larger shapes. DeepLabV3+ produces cleaner shapes around larger buildings and roads, which fits the benefit I expected from giving the model more spatial context.</p>
+      <figure class="report-figure report-figure-wide">
+        <img src="../../assets/austin-model-comparison.png" alt="Austin model prediction comparison from the report, illustrating differences in large land-cover shapes between U-Net and DeepLabV3+.">
+        <figcaption>Austin example from the report. The visual review compares model predictions; no labeled test mask was available.</figcaption>
+      </figure>
+      <p>Accra shows the trade-off. U-Net picks up developed space between small houses, while DeepLabV3+ labels much of the area as building. The broader context helps with large shapes, but it can also cause the model to overgeneralize at finer scales.</p>
+      <figure class="report-figure report-figure-wide">
+        <img src="../../assets/accra-model-comparison.png" alt="Accra model prediction comparison from the report, showing DeepLabV3+ overgeneralizing small houses while U-Net preserves spaces between them.">
+        <figcaption>Accra example from the report. These unlabeled test-set examples support visual review, not accuracy scoring.</figcaption>
+      </figure>
+      <p>The model-comparison notebook shows additional examples with the input image and reference label alongside both predictions:</p>
+      <div class="report-figure-grid">
+        <figure class="report-figure">
+          <img src="../../assets/aachen-16-notebook-comparison.png" alt="Four-panel comparison of the Aachen 16 scene, reference mask, U-Net prediction, and DeepLabV3+ prediction.">
+          <figcaption>Aachen 16 &middot; comparison notebook. Qualitative comparison only; this is not a held-out test score.</figcaption>
+        </figure>
+        <figure class="report-figure">
+          <img src="../../assets/chicago-10-notebook-comparison.png" alt="Four-panel comparison of the Chicago 10 scene, reference mask, U-Net prediction, and DeepLabV3+ prediction.">
+          <figcaption>Chicago 10 &middot; comparison notebook. The report's empty test split means this figure should not be read as test-set evaluation.</figcaption>
+        </figure>
+      </div>
+    </section>
 
-      <section class="project-section" aria-labelledby="observations-title">
-        <div><p class="section-number">04 / QUALITATIVE REVIEW</p><h2 id="observations-title">Where the predictions struggle</h2></div>
-        <div class="project-copy">
-          <p>Visual comparisons make the failure modes easier to inspect than a single aggregate score:</p>
-          <ul class="observation-list">
-            <li>In the Mahe 15 example, a ship is predicted as a building.</li>
-            <li>Buildings are difficult to distinguish when they are obscured, as noted for Koeln 12.</li>
-            <li>Other examples flagged for review include heterogeneous surroundings in Austin 47, small houses in Accra 10, and the different angle and lighting in Paris 67.</li>
-          </ul>
-          <p>These are qualitative observations from selected notebook examples, not a systematic error analysis.</p>
-        </div>
-      </section>
+    <section class="report-section" aria-labelledby="limits-title">
+      <h2 id="limits-title">What I would try next</h2>
+      <p>The models still struggle to draw fine object boundaries. The report identifies several practical limits: individual tiles cover large areas, so tiled predictions can look patchy where neighboring tiles do not share context; high-resolution imagery is costly to scale; and models trained on varied city scenes may behave poorly on more uniform landscapes. U-Net also produced scattered class predictions in some areas.</p>
+      <p>I would test a sliding-window prediction so edge pixels are evaluated in overlapping image windows, add near-infrared imagery to help distinguish vegetation, and try PointRend to sharpen boundaries.</p>
+    </section>
 
-      <section class="project-section" id="sources" aria-labelledby="sources-title">
-        <div><p class="section-number">05 / SOURCE MATERIAL</p><h2 id="sources-title">Notebooks and references</h2></div>
-        <div class="project-copy">
-          <ul class="project-source-list">
-            <li><a href="source/Unet_DATA_5610_final.ipynb">U-Net training notebook</a> &middot; source code with saved outputs removed</li>
-            <li><a href="source/DeepLabv3%2B_DATA_5610_final.ipynb">DeepLabV3+ training notebook</a> &middot; source code with saved outputs removed</li>
-            <li><a href="source/test_models.ipynb">Model comparison notebook</a> &middot; source code with saved outputs removed</li>
-            <li><a href="source/Addressing%20The%20Heterogeneity%20Problem%20with%20Automated%20Land%20Cover%20Classification.pdf">Project report (PDF)</a></li>
-            <li><a href="https://doi.org/10.5281/zenodo.7223446">OpenEarthMap dataset on Zenodo</a></li>
-            <li><a href="https://open-earth-map.org/overview_oem.html">OpenEarthMap class and source imagery overview</a></li>
-          </ul>
-          <p class="citation">Dataset citation: Xia, J., Yokoya, N., Adriano, B., &amp; Broni-Bediako, C. (2022). <em>OpenEarthMap: A Benchmark Dataset for Global High-Resolution Land Cover Mapping.</em> Zenodo. <a href="https://doi.org/10.5281/zenodo.7223446">https://doi.org/10.5281/zenodo.7223446</a>. This Paris imagery example is adapted from Maxar via SpaceNet under CC BY-SA 4.0. Source imagery licensing varies by region; consult the <a href="https://open-earth-map.org/attribution.html">official source attribution</a> before reuse.</p>
-        </div>
-      </section>
-    </div>
-    <a class="back-to-work" href="../../index.html#work">&larr; Back to selected work</a>
+    <section class="report-section" id="sources" aria-labelledby="sources-title">
+      <h2 id="sources-title">Project files and references</h2>
+      <ul class="report-source-list">
+        <li><a href="source/Addressing%20The%20Heterogeneity%20Problem%20with%20Automated%20Land%20Cover%20Classification.pdf">Read the project report</a></li>
+        <li><a href="source/Unet_DATA_5610_final.ipynb">U-Net notebook</a> &middot; outputs removed</li>
+        <li><a href="source/DeepLabv3%2B_DATA_5610_final.ipynb">DeepLabV3+ notebook</a> &middot; outputs removed</li>
+        <li><a href="source/test_models.ipynb">Model comparison notebook</a> &middot; outputs removed</li>
+        <li>Ronneberger, Fischer, and Brox (2015), <a href="https://arxiv.org/abs/1505.04597">U-Net: Convolutional Networks for Biomedical Image Segmentation</a>.</li>
+        <li>Chen et al. (2018), <a href="https://arxiv.org/abs/1802.02611">Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation</a>.</li>
+        <li><a href="https://doi.org/10.5281/zenodo.7223446">OpenEarthMap dataset</a> &middot; Xia et al., 2023</li>
+      </ul>
+    </section>
+    <a class="back-to-work" href="../../index.html#work">&larr; Back to selected projects</a>
   </main>
 
   <footer class="site-footer">
     <span>Alexander Sheldon</span>
-    <span class="mono-label">DATA &middot; PLACE &middot; PUBLIC GOOD</span>
     <a href="#main">Back to top &uarr;</a>
   </footer>
 </body>
