@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f2f2ec">
+  <meta name="description" content="A geospatial analysis comparing kernel density estimation and minimum convex polygons for coyote home ranges.">
+  <title>Coyote Home Ranges: KDE and MCP | Alexander Sheldon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="wordmark" href="../../index.html" aria-label="Alexander Sheldon home">
+      <span class="wordmark-mark">AS</span>
+      <span>Alexander Sheldon</span>
+    </a>
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="../../index.html#work">Work</a>
+      <a href="../../index.html#about">About</a>
+      <a class="nav-index" href="#methods">KDE / MCP</a>
+    </nav>
+  </header>
+
+  <main id="main" class="project-main">
+    <div class="project-breadcrumb"><a href="../../index.html">Portfolio</a> / Selected projects / 02</div>
+    <header class="project-hero-heading">
+      <p class="project-kicker">GEOSPATIAL ANALYSIS &middot; SPATIAL ECOLOGY</p>
+      <h1 class="project-title">Two ways to draw<br>a coyote's home range.</h1>
+      <p class="project-lede">Minimum Convex Polygons capture the outer extent of recorded movement. Kernel Density Estimation reveals where those locations cluster. This project uses both views to study 984 radio-collar fixes from seven coyotes.</p>
+    </header>
+
+    <dl class="project-facts">
+      <div><dt>Animals</dt><dd>7 coyotes</dd></div>
+      <div><dt>Observations</dt><dd>984 locations</dd></div>
+      <div><dt>Methods</dt><dd>KDE &middot; MCP</dd></div>
+      <div><dt>KDE contours</dt><dd>50% core &middot; 5% total</dd></div>
+    </dl>
+
+    <div class="project-content">
+      <section class="project-section" aria-labelledby="question-title">
+        <div><p class="section-number">01 / THE DATA</p><h2 id="question-title">What does a home range measure?</h2></div>
+        <div class="project-copy">
+          <p>The analysis uses a subset of radio-collar records from seven individual coyotes. Across 984 locations, the records include sex, season, territory, coordinates, and time of capture.</p>
+          <p>The central question is how the choice of spatial estimator changes the picture of animal space use: a boundary that encloses fixes, or a surface that gives higher weight to clusters.</p>
+        </div>
+      </section>
+
+      <section class="project-section" id="methods" aria-labelledby="methods-title">
+        <div><p class="section-number">02 / METHOD COMPARISON</p><h2 id="methods-title">Extent versus intensity</h2></div>
+        <div class="project-copy">
+          <div class="method-table-wrap">
+            <table class="method-table">
+              <caption>How the two home-range estimators represent the same kind of movement records</caption>
+              <thead><tr><th scope="col">Lens</th><th scope="col">Minimum Convex Polygon</th><th scope="col">Kernel Density Estimation</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">How it works</th><td>Draws the smallest convex polygon that contains the recorded points.</td><td>Places a smooth kernel around each location and aggregates the surfaces into an estimate of use density.</td></tr>
+                <tr><th scope="row">What stands out</th><td>The outermost fixes define the vertices; sparse outliers can stretch the boundary.</td><td>Clusters receive higher density, revealing concentration as well as broader use.</td></tr>
+                <tr><th scope="row">Project output</th><td>A geometric envelope for each set of movement locations.</td><td>A 50th-percentile core range and a 5th-percentile total-range contour, as described in the project.</td></tr>
+                <tr><th scope="row">Best read as</th><td>Observed spatial extent.</td><td>Relative intensity of use, dependent on the density settings and contour threshold.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="metric-note"><strong>They answer different questions.</strong> MCP is a useful baseline for the outer extent of recorded fixes, but it treats a remote point as a boundary vertex. KDE gives more visual weight to dense clusters, but its contours depend on choices such as kernel bandwidth and raster resolution.</p>
+        </div>
+      </section>
+
+      <section class="project-section" aria-labelledby="maps-title">
+        <div><p class="section-number">03 / SPATIAL OUTPUTS</p><h2 id="maps-title">Read the maps side by side</h2></div>
+        <div class="project-copy">
+          <p>The original project presents MCP and KDE outputs in separate figures. Together, they contrast the all-points envelope with percentile-based density ranges; they are not presented here as a matched, quantitative comparison for one animal.</p>
+          <figure class="comparison-figure">
+            <img src="../../assets/coyote-kde-mcp-schematic.svg" alt="Conceptual comparison of a single illustrative location pattern summarized as an outer MCP hull and as KDE density contours. Not derived from the coyote collar data.">
+            <figcaption>Conceptual schematic of the method contrast, not a project output. The original MCP and KDE results are on <a href="https://sites.google.com/view/alexandersheldon-portfolio/home-range-analysis-a-geospatial-analysis-of-coyote-movement-patterns">the published project page</a>.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="project-section" aria-labelledby="selection-title">
+        <div><p class="section-number">04 / HABITAT CONTEXT</p><h2 id="selection-title">From range to selection</h2></div>
+        <div class="project-copy">
+          <p>The project also compares observed land-cover records with expected counts based on each cover type's share of the study area. Ratios above 1 indicate more observations than expected under that area-proportional baseline; ratios below 1 indicate fewer.</p>
+          <p>The highest reported ratio belongs to Inter-Mountain Basins Semi-Desert Shrub Steppe, but it is based on two observations in a class covering only 0.2% of the area. Treat that result as sparse evidence, not a strong preference claim.</p>
+        </div>
+      </section>
+
+      <section class="project-section" aria-labelledby="limits-title">
+        <div><p class="section-number">05 / LIMITS &amp; REPRODUCIBILITY</p><h2 id="limits-title">What the published results support</h2></div>
+        <div class="project-copy">
+          <ul class="observation-list">
+            <li>The published page describes MCP outlier sensitivity and the KDE density interpretation, but does not report per-animal area values for a numerical estimator comparison.</li>
+            <li>The available project files do not include the original collar locations or document the coordinate reference system, KDE bandwidth, or raster cell size. Those settings are needed to reproduce and compare areas rigorously.</li>
+            <li>The published figures support a qualitative contrast between range extent and density of use; they do not establish a statistical difference or preference beyond the selection-ratio caveat above.</li>
+          </ul>
+          <p>Processing note: the source page reports that an ArcPy script automated density-surface calculations across animals.</p>
+        </div>
+      </section>
+
+      <section class="project-section" aria-labelledby="sources-title">
+        <div><p class="section-number">06 / SOURCE</p><h2 id="sources-title">Original project</h2></div>
+        <div class="project-copy">
+          <ul class="project-source-list">
+            <li><a href="https://sites.google.com/view/alexandersheldon-portfolio/home-range-analysis-a-geospatial-analysis-of-coyote-movement-patterns">Home Range Analysis: A Geospatial Analysis of Coyote Movement Patterns</a> &middot; original project text and figures</li>
+            <li><a href="https://sites.google.com/view/alexandersheldon-portfolio/projects">Portfolio projects</a> &middot; related GIS work</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+    <a class="back-to-work" href="../../index.html#work">&larr; Back to selected projects</a>
+  </main>
+
+  <footer class="site-footer">
+    <span>Alexander Sheldon</span>
+    <span class="mono-label">DATA &middot; PLACE &middot; PUBLIC GOOD</span>
+    <a href="#main">Back to top &uarr;</a>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f2f2ec">
+  <meta name="description" content="A semantic segmentation project comparing U-Net and DeepLabV3+ on OpenEarthMap satellite and aerial imagery.">
+  <title>Land-Cover Segmentation | Alexander Sheldon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="wordmark" href="../../index.html" aria-label="Alexander Sheldon home">
+      <span class="wordmark-mark">AS</span>
+      <span>Alexander Sheldon</span>
+    </a>
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="../../index.html#work">Work</a>
+      <a href="../../index.html#about">About</a>
+      <a class="nav-index" href="#sources">Project files</a>
+    </nav>
+  </header>
+
+  <main id="main" class="project-main">
+    <div class="project-breadcrumb"><a href="../../index.html">Portfolio</a> / Selected project / 01</div>
+    <header class="project-hero-heading">
+      <p class="project-kicker">DATA 5610 &middot; COMPUTER VISION CASE STUDY</p>
+      <h1 class="project-title">Mapping land cover,<br>pixel by pixel.</h1>
+      <p class="project-lede">A study of U-Net and DeepLabV3+ for semantic segmentation of high-resolution satellite and aerial imagery, using OpenEarthMap.</p>
+    </header>
+
+    <dl class="project-facts">
+      <div><dt>Task</dt><dd>Semantic segmentation</dd></div>
+      <div><dt>Dataset</dt><dd>OpenEarthMap</dd></div>
+      <div><dt>Models</dt><dd>U-Net &middot; DeepLabV3+</dd></div>
+      <div><dt>Tools</dt><dd>TensorFlow &middot; Rasterio</dd></div>
+    </dl>
+
+    <figure class="comparison-figure">
+      <img src="../../assets/paris-67-comparison.png" alt="Four-panel comparison of a Paris satellite scene, its OpenEarthMap reference mask, and U-Net and DeepLabV3+ predicted masks.">
+      <figcaption>Paris 67: input image, reference label mask, U-Net prediction, and DeepLabV3+ prediction. Figure exported from the project comparison notebook. Source imagery: Maxar via SpaceNet, Paris, CC BY-SA 4.0. Dataset labels: OpenEarthMap.</figcaption>
+    </figure>
+
+    <div class="project-content">
+      <section class="project-section" aria-labelledby="task-title">
+        <div><p class="section-number">01 / THE TASK</p><h2 id="task-title">A label for every pixel</h2></div>
+        <div class="project-copy">
+          <p>Instead of assigning one category to a whole image, semantic segmentation predicts a land-cover class for each pixel. The project uses OpenEarthMap, a global benchmark with 5,000 high-resolution images and manually annotated labels across 97 regions in 44 countries.</p>
+          <p>The dataset documents eight land-cover classes:</p>
+          <ul class="class-list" aria-label="OpenEarthMap land-cover classes">
+            <li>Bareland</li><li>Rangeland</li><li>Developed space</li><li>Road</li><li>Tree</li><li>Water</li><li>Agriculture land</li><li>Building</li>
+          </ul>
+          <aside class="class-warning"><p><strong>Configuration note.</strong> Both training notebooks set <code>CLASSES = 9</code>, while OpenEarthMap documents eight label classes. The project files do not explain the ninth output channel, so this case study does not assume it represents background or interpret class-specific results.</p></aside>
+        </div>
+      </section>
+
+      <section class="project-section" aria-labelledby="approach-title">
+        <div><p class="section-number">02 / APPROACH</p><h2 id="approach-title">Two routes to a mask</h2></div>
+        <div class="project-copy">
+          <p>GeoTIFF imagery and labels are loaded with Rasterio, resized to 512 &times; 512 pixels, and image values are normalized before inference. Both models are built and trained in TensorFlow.</p>
+          <div class="model-list">
+            <article class="model-row"><h3>U-Net</h3><p>A ground-up encoder-decoder implementation with skip connections, trained for 15 epochs in the recorded run.</p></article>
+            <article class="model-row"><h3>DeepLabV3+</h3><p>A second segmentation architecture trained for 25 epochs in the recorded run; its prediction masks are compared against the same visual examples.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="project-section" aria-labelledby="results-title">
+        <div><p class="section-number">03 / RECORDED RESULTS</p><h2 id="results-title">Validation snapshots</h2></div>
+        <div class="project-copy">
+          <p>The notebooks record the following validation metrics at the indicated epochs:</p>
+          <div class="metric-wrap">
+            <table class="metric-table">
+              <caption>Recorded validation metrics by model run</caption>
+              <thead><tr><th scope="col">Run snapshot</th><th scope="col">Epoch</th><th scope="col">Dice</th><th scope="col">Mean IoU</th><th scope="col">Pixel accuracy</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">U-Net</th><td>10 / 15</td><td>0.4911</td><td>0.3491</td><td>0.5846</td></tr>
+                <tr><th scope="row">DeepLabV3+</th><td>25 / 25</td><td>0.3557</td><td>0.6060</td><td>0.7249</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="metric-note"><strong>Interpret with care.</strong> These are validation log snapshots from separate runs, not a controlled head-to-head benchmark. The notebooks report no retained test pairs and use validation data for evaluation; the U-Net notebook also reports 365 of 500 validation pairs remaining. Metric implementations and usable samples differ, and the nine-channel configuration is unresolved. The values should not be read as held-out test or generalization performance.</p>
+        </div>
+      </section>
+
+      <section class="project-section" aria-labelledby="observations-title">
+        <div><p class="section-number">04 / QUALITATIVE REVIEW</p><h2 id="observations-title">Where the predictions struggle</h2></div>
+        <div class="project-copy">
+          <p>Visual comparisons make the failure modes easier to inspect than a single aggregate score:</p>
+          <ul class="observation-list">
+            <li>In the Mahe 15 example, a ship is predicted as a building.</li>
+            <li>Buildings are difficult to distinguish when they are obscured, as noted for Koeln 12.</li>
+            <li>Other examples flagged for review include heterogeneous surroundings in Austin 47, small houses in Accra 10, and the different angle and lighting in Paris 67.</li>
+          </ul>
+          <p>These are qualitative observations from selected notebook examples, not a systematic error analysis.</p>
+        </div>
+      </section>
+
+      <section class="project-section" id="sources" aria-labelledby="sources-title">
+        <div><p class="section-number">05 / SOURCE MATERIAL</p><h2 id="sources-title">Notebooks and references</h2></div>
+        <div class="project-copy">
+          <ul class="project-source-list">
+            <li><a href="source/Unet_DATA_5610_final.ipynb">U-Net training notebook</a> &middot; source code with saved outputs removed</li>
+            <li><a href="source/DeepLabv3%2B_DATA_5610_final.ipynb">DeepLabV3+ training notebook</a> &middot; source code with saved outputs removed</li>
+            <li><a href="source/test_models.ipynb">Model comparison notebook</a> &middot; source code with saved outputs removed</li>
+            <li><a href="source/Addressing%20The%20Heterogeneity%20Problem%20with%20Automated%20Land%20Cover%20Classification.pdf">Project report (PDF)</a></li>
+            <li><a href="https://doi.org/10.5281/zenodo.7223446">OpenEarthMap dataset on Zenodo</a></li>
+            <li><a href="https://open-earth-map.org/overview_oem.html">OpenEarthMap class and source imagery overview</a></li>
+          </ul>
+          <p class="citation">Dataset citation: Xia, J., Yokoya, N., Adriano, B., &amp; Broni-Bediako, C. (2022). <em>OpenEarthMap: A Benchmark Dataset for Global High-Resolution Land Cover Mapping.</em> Zenodo. <a href="https://doi.org/10.5281/zenodo.7223446">https://doi.org/10.5281/zenodo.7223446</a>. This Paris imagery example is adapted from Maxar via SpaceNet under CC BY-SA 4.0. Source imagery licensing varies by region; consult the <a href="https://open-earth-map.org/attribution.html">official source attribution</a> before reuse.</p>
+        </div>
+      </section>
+    </div>
+    <a class="back-to-work" href="../../index.html#work">&larr; Back to selected work</a>
+  </main>
+
+  <footer class="site-footer">
+    <span>Alexander Sheldon</span>
+    <span class="mono-label">DATA &middot; PLACE &middot; PUBLIC GOOD</span>
+    <a href="#main">Back to top &uarr;</a>
+  </footer>
+</body>
+</html>
